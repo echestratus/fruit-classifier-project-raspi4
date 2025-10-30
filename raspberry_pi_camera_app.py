@@ -10,7 +10,7 @@ from pathlib import Path
 from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw, ImageFont
 import numpy as np
 
 # Try to import picamera2 for RPi Camera
@@ -217,6 +217,9 @@ class CameraApp:
         # Initialize configuration
         Config.create_dirs()
         
+        # Create placeholder images first
+        self.create_placeholder_images()
+        
         # Load model
         try:
             self.model_inference = ModelInference(str(Config.MODEL_PATH))
@@ -249,6 +252,88 @@ class CameraApp:
         
         # Handle window close
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+    
+    def create_placeholder_images(self):
+        """Create placeholder images for camera and captured previews"""
+        # Camera placeholder
+        self.camera_placeholder = self.create_placeholder(
+            Config.PREVIEW_SIZE,
+            "📷",
+            "Camera Preview",
+            "Waiting for camera...",
+            bg_color=(40, 40, 40),
+            text_color=(200, 200, 200)
+        )
+        
+        # Captured image placeholder
+        self.capture_placeholder = self.create_placeholder(
+            Config.PREVIEW_SIZE,
+            "🖼️",
+            "No Image",
+            "Capture or select an image",
+            bg_color=(80, 80, 80),
+            text_color=(220, 220, 220)
+        )
+    
+    def create_placeholder(self, size, emoji, title, subtitle, bg_color, text_color):
+        """
+        Create a placeholder image with text
+        
+        Args:
+            size: Tuple (width, height)
+            emoji: Emoji or icon text
+            title: Main title text
+            subtitle: Subtitle text
+            bg_color: Background color RGB tuple
+            text_color: Text color RGB tuple
+        
+        Returns:
+            PIL ImageTk.PhotoImage
+        """
+        width, height = size
+        
+        # Create image
+        img = Image.new('RGB', (width, height), color=bg_color)
+        draw = ImageDraw.Draw(img)
+        
+        # Try to use default font, fallback to basic if not available
+        try:
+            # Try to load a nice font
+            emoji_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 48)
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
+            subtitle_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+        except:
+            # Fallback to default font
+            emoji_font = ImageFont.load_default()
+            title_font = ImageFont.load_default()
+            subtitle_font = ImageFont.load_default()
+        
+        # Draw emoji/icon
+        emoji_bbox = draw.textbbox((0, 0), emoji, font=emoji_font)
+        emoji_width = emoji_bbox[2] - emoji_bbox[0]
+        emoji_height = emoji_bbox[3] - emoji_bbox[1]
+        emoji_x = (width - emoji_width) // 2
+        emoji_y = height // 3 - emoji_height // 2
+        draw.text((emoji_x, emoji_y), emoji, fill=text_color, font=emoji_font)
+        
+        # Draw title
+        title_bbox = draw.textbbox((0, 0), title, font=title_font)
+        title_width = title_bbox[2] - title_bbox[0]
+        title_x = (width - title_width) // 2
+        title_y = height // 2
+        draw.text((title_x, title_y), title, fill=text_color, font=title_font)
+        
+        # Draw subtitle
+        subtitle_bbox = draw.textbbox((0, 0), subtitle, font=subtitle_font)
+        subtitle_width = subtitle_bbox[2] - subtitle_bbox[0]
+        subtitle_x = (width - subtitle_width) // 2
+        subtitle_y = height // 2 + 30
+        draw.text((subtitle_x, subtitle_y), subtitle, fill=(160, 160, 160), font=subtitle_font)
+        
+        # Add border
+        draw.rectangle([(0, 0), (width-1, height-1)], outline=(100, 100, 100), width=2)
+        
+        return ImageTk.PhotoImage(img)
     
     def init_camera(self):
         """Initialize Raspberry Pi Camera"""
@@ -320,6 +405,11 @@ class CameraApp:
                                     width=320, height=240)
         self.video_label.pack(padx=5, pady=5)
         
+        # Set camera placeholder
+        if not self.camera_active:
+            self.video_label.config(image=self.camera_placeholder)
+            self.video_label.image = self.camera_placeholder
+        
         if not self.camera_active:
             no_camera_label = tk.Label(camera_container, 
                                        text="Camera not available", 
@@ -334,6 +424,10 @@ class CameraApp:
         self.captured_label = tk.Label(result_container, bg="gray", 
                                        width=320, height=240)
         self.captured_label.pack(padx=5, pady=5)
+        
+        # Set captured placeholder
+        self.captured_label.config(image=self.capture_placeholder)
+        self.captured_label.image = self.capture_placeholder
         
         # Control buttons
         control_frame = tk.Frame(main_frame)
@@ -602,9 +696,9 @@ class CameraApp:
         self.prob_text.delete(1.0, tk.END)
         self.prob_text.config(state=tk.DISABLED)
         
-        # Clear captured image
-        self.captured_label.configure(image='')
-        self.captured_label.image = None
+        # Restore placeholder for captured image
+        self.captured_label.configure(image=self.capture_placeholder)
+        self.captured_label.image = self.capture_placeholder
         
         self.status_label.config(text="Cleared", fg="blue")
     

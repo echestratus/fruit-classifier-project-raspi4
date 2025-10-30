@@ -9,7 +9,7 @@ from pathlib import Path
 from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw, ImageFont
 import numpy as np
 
 # Camera import
@@ -151,21 +151,21 @@ class SimplePalmClassifier:
         title.pack()
         
         # Camera preview
-        cam_frame = tk.LabelFrame(self.root, text="Camera Preview", font=("Arial", 12, "bold"))
+        cam_frame = tk.LabelFrame(root_frame, text="Camera Preview", font=("Arial", 12, "bold"))
         cam_frame.pack(padx=10, pady=5, fill=tk.BOTH)
         
         self.cam_label = tk.Label(cam_frame, bg="black", width=320, height=240)
         self.cam_label.pack(padx=10, pady=10)
         
         # Captured image
-        img_frame = tk.LabelFrame(self.root, text="Captured Image", font=("Arial", 12, "bold"))
+        img_frame = tk.LabelFrame(root_frame, text="Captured Image", font=("Arial", 12, "bold"))
         img_frame.pack(padx=10, pady=5, fill=tk.BOTH)
         
         self.img_label = tk.Label(img_frame, bg="gray", width=320, height=240)
         self.img_label.pack(padx=10, pady=10)
         
         # Buttons Frame
-        btn_frame = tk.Frame(self.root)
+        btn_frame = tk.Frame(root_frame)
         btn_frame.pack(pady=10)
         
         # Buttons
@@ -183,7 +183,7 @@ class SimplePalmClassifier:
                  width=15, height=2).grid(row=0, column=2, padx=5)
         
         # Results Frame
-        result_frame = tk.LabelFrame(self.root, text="Results", font=("Arial", 12, "bold"))
+        result_frame = tk.LabelFrame(root_frame, text="Results", font=("Arial", 12, "bold"))
         result_frame.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
         
         # Result labels
@@ -201,9 +201,9 @@ class SimplePalmClassifier:
         self.prob_text.pack(pady=10, padx=10)
         
         # Status
-        self.status = tk.Label(self.root, text="Ready", relief=tk.SUNKEN,
+        self.status = tk.Label(root_frame, text="Ready", relief=tk.SUNKEN,
                               anchor=tk.W, font=("Arial", 10))
-        self.status.pack(side=tk.BOTTOM, fill=tk.X)
+        self.status.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
     
     def update_camera(self):
         """Update camera preview"""
