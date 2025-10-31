@@ -61,7 +61,7 @@ class Config:
     # Classification settings
     CLASS_NAMES = ['sawit_mentah', 'sawit_matang']
     CONFIDENCE_THRESHOLD = 0.70
-    ENTROPY_THRESHOLD = 0.7
+    ENTROPY_THRESHOLD = 0.6
     
     # Camera settings
     CAMERA_RESOLUTION = (640, 480)
